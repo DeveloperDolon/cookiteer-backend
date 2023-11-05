@@ -39,6 +39,8 @@ async function run() {
     await client.connect();
     // Send a ping to confirm a successful connection
 
+    const foodCollection = client.db("cookiteerDB").collection("foodsCollection");
+
     // jwt authorization api is here
     app.post("/api/v1/jwt", logger,(req, res) => {
       try{
@@ -66,7 +68,15 @@ async function run() {
 
 
     // foods related api methods are here
-    
+    app.post("/api/v1/add-food", logger, async (req, res) => {
+      try{
+        const foodInfo = req.body;
+        const result = await foodCollection.insertOne(foodInfo);
+        res.send(result);
+      } catch(err) {
+        console.log(err.message);
+      }
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
