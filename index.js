@@ -78,6 +78,15 @@ async function run() {
       }
     })
 
+    app.get("/api/v1/foods", async (req, res) => {
+      try{
+        const result = await foodCollection.find().toArray();
+        res.send(result);
+      } catch(err) {
+        console.log(err.message);
+      }
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
