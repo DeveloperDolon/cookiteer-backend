@@ -78,10 +78,28 @@ async function run() {
       }
     })
 
-    app.get("/api/v1/foods", async (req, res) => {
+    app.get("/api/v1/foods", logger, async (req, res) => {
       try{
-        const result = await foodCollection.find().toArray();
+
+        let sortingProcess = {};
+        let query = {};
+        let options = {};
+
+
+        if(req.query.sort && req.query.sortItem === "foodQuantity") {
+          sortingProcess = req.query.sort;
+
+          options = {
+            sort: {
+              foodQuantity : sortingProcess === "asc" ? 1 : -1,
+            }
+          }
+        }
+
+        const cursor = foodCollection.find(query, options);
+        const result = await cursor.toArray();
         res.send(result);
+
       } catch(err) {
         console.log(err.message);
       }
