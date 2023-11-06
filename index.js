@@ -81,10 +81,26 @@ async function run() {
     app.get("/api/v1/foods", logger, async (req, res) => {
       try{
 
-        let sortingProcess = {};
+        let sortingProcess = "";
         let query = {};
         let options = {};
 
+
+        if(req.query.category) {
+          if(req.query.category.search("And")) {
+            const categoryText = req.query.category.replace(/And/gi, "&");
+            query = {category : categoryText};
+          }
+        }
+
+        if(req.query.sort && req.query.sortItem === "expiredDate") {
+          sortingProcess = req.query.sort;
+          options = {
+            sort: {
+              expiredDate : sortingProcess === "asc" ? 1 : -1
+            }
+          }
+        }
 
         if(req.query.sort && req.query.sortItem === "foodQuantity") {
           sortingProcess = req.query.sort;
@@ -95,6 +111,8 @@ async function run() {
             }
           }
         }
+
+
 
         const cursor = foodCollection.find(query, options);
         const result = await cursor.toArray();
