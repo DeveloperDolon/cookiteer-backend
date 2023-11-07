@@ -57,6 +57,7 @@ async function run() {
     // Send a ping to confirm a successful connection
 
     const foodCollection = client.db("cookiteerDB").collection("foodsCollection");
+    const requestedFoodsCollection = client.db("cookiteerDB").collection("requestedFoodsCollection");
 
     // jwt authorization api is here
     app.post("/api/v1/jwt", logger,(req, res) => {
@@ -84,6 +85,23 @@ async function run() {
 
 
     // foods related api methods are here
+
+    app.post("/api/v1/food-requests", logger, async (req, res) => {
+      try{
+        const requestData = req.body;
+        const query = {foodId : requestData.foodId};
+        const isExist = await requestedFoodsCollection.findOne(query);
+
+        if(isExist) {
+          return res.status(409).send({message: "Conflict"});
+        }
+
+        const result = await requestedFoodsCollection.insertOne(requestData);
+        res.send(result);
+      } catch(err){
+        console.log(err.message);
+      }
+    })
 
     app.get("/api/v1/foods/:id", logger, async(req, res) => {
       try{
