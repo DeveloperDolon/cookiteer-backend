@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
@@ -68,6 +68,19 @@ async function run() {
 
 
     // foods related api methods are here
+
+    app.get("/api/v1/foods/:id", logger, async(req, res) => {
+      try{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await foodCollection.findOne(query);
+
+        res.send(result);
+      } catch(err){
+        console.log(err.message);
+      }
+    })
+
     app.post("/api/v1/add-food", logger, async (req, res) => {
       try{
         const foodInfo = req.body;
@@ -80,16 +93,22 @@ async function run() {
 
     app.get("/api/v1/foods", logger, async (req, res) => {
       try{
-
+        let categoryText = req?.query?.category;
+        let email = req?.query?.email;
         let sortingProcess = "";
         let query = {};
         let options = {};
 
-
-        if(req.query.category) {
-          if(req.query.category.search("And")) {
-            const categoryText = req.query.category.replace(/And/gi, "&");
+        if(req.query) {
+          if(categoryText) { 
+            if(req.query.category.search("And") > 0) {
+              categoryText = req.query.category.replace(/And/gi, "&");
+            }
             query = {category : categoryText};
+          }
+
+          if(email) {
+            query = {donarEmail : email};
           }
         }
 
@@ -111,9 +130,7 @@ async function run() {
             }
           }
         }
-
-
-
+        
         const cursor = foodCollection.find(query, options);
         const result = await cursor.toArray();
         res.send(result);
