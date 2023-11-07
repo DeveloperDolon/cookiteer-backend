@@ -85,6 +85,23 @@ async function run() {
 
 
     // foods related api methods are here
+    app.get("/api/v1/food-requests", verifyToken, logger, async (req, res) => {
+      try{
+
+        if(req?.query?.email !== req?.user?.user) {
+          return res.status(403).send({message: "Forbidden Access!"});
+        }
+
+        const email = req.query.email;
+        const query = {requesterEmail: email};
+
+        const result = await requestedFoodsCollection.find(query).toArray();
+        res.send(result);
+
+      } catch (err) {
+        console.log(err.message);
+      }
+    })
 
     app.post("/api/v1/food-requests", logger, async (req, res) => {
       try{
@@ -102,6 +119,8 @@ async function run() {
         console.log(err.message);
       }
     })
+
+
 
     app.get("/api/v1/foods/:id", logger, async(req, res) => {
       try{
