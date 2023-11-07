@@ -86,6 +86,28 @@ async function run() {
 
     // foods related api methods are here
 
+    app.patch("/api/v1/manage-food-requests", logger, async (req, res) => {
+      try {
+
+        const requestId = req.query.id;
+        const foodId = req.query.foodId;
+
+        const removeFood = await foodCollection.deleteOne({_id: new ObjectId(foodId)});
+        
+        const updateDoc = {
+          $set: {
+            status: "Delivered"
+          }
+        }
+        const query = {_id: new ObjectId(requestId)};
+        const result = await requestedFoodsCollection.updateOne(query, updateDoc);
+        res.send(result);
+
+      } catch(err) {
+        console.log(err.message);
+      }
+    })
+
     app.get("/api/v1/manage-food-requests", logger, verifyToken,async(req, res) => {
       try{
 
@@ -100,7 +122,7 @@ async function run() {
         }
 
         const option = {
-          projection: {requesterName: 1, requesterEmail: 1, requesterImage: 1, requestDate: 1, status: 1, additionalNotes: 1}
+          projection: {requesterName: 1, requesterEmail: 1, requesterImage: 1, requestDate: 1, status: 1, additionalNotes: 1, foodId: 1}
         }
 
         const result = await requestedFoodsCollection.find(query, option).toArray();
