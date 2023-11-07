@@ -152,6 +152,7 @@ async function run() {
         let sortingProcess = "";
         let query = {};
         let options = {};
+        let searchQuery = req?.query?.search;
 
         if(req.query) {
           if(categoryText) { 
@@ -160,6 +161,10 @@ async function run() {
             }
             query = {category : categoryText};
           }
+        }
+
+        if(searchQuery) {
+          query = {foodName: {$regex: searchQuery, $options: 'i'}};
         }
 
         if(req.query.sort && req.query.sortItem === "expiredDate") {
@@ -180,7 +185,7 @@ async function run() {
             }
           }
         }
-
+        
         const cursor = foodCollection.find(query, options);
         const result = await cursor.toArray();
         res.send(result);
