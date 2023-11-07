@@ -95,9 +95,25 @@ async function run() {
         const email = req.query.email;
         const query = {requesterEmail: email};
 
-        const result = await requestedFoodsCollection.find(query).toArray();
+        const option = {
+          projection: {foodName: 1, foodImage: 1, donarName: 1, pickUpLocation: 1, expiredDate: 1, requestDate: 1, donateMoney : 1, status: 1}
+        }
+
+        const result = await requestedFoodsCollection.find(query, option).toArray();
         res.send(result);
 
+      } catch (err) {
+        console.log(err.message);
+      }
+    })
+
+    app.delete("/api/v1/food-requests/:id", logger, async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+
+        const result = await requestedFoodsCollection.deleteOne(query);
+        res.send(result);
       } catch (err) {
         console.log(err.message);
       }
