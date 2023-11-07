@@ -33,6 +33,23 @@ const logger = (req, res, next) => {
   next();
 }
 
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+
+  if(!token) {
+    return res.status(401).send({message: "Unauthorized Access!"})
+  }
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
+    if(err) {
+      return res.status(401).send({message: "Unauthorized Access!!"});
+    }
+
+    req.user = decode;
+    next();
+  })
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -50,7 +67,6 @@ async function run() {
         res.cookie('token', token, {
           httpOnly: true,
           secure: false,
-          sameSite: "none"
         }).send({success : true});
       } catch(err) {
         console.log(err.message);
@@ -81,6 +97,30 @@ async function run() {
       }
     })
 
+    app.patch("/api/v1/update-food/:id", logger, async (req, res) => {
+      try{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const updateData = req.body;
+        const updateDoc = {
+          $set: {
+            foodName: updateData.foodName,
+            foodImage: updateData.foodImage,
+            foodQuantity: updateData.foodQuantity,
+            expiredDate: updateData.expiredDate,
+            pickUpLocation: updateData.pickUpLocation,
+            category: updateData.category,
+            additionalNotes: updateData.additionalNotes,
+          }
+        }
+
+        const result = await foodCollection.updateOne(query, updateDoc);
+        res.send(result);
+      } catch(err){
+        console.log(err.message);
+      }
+    })
+
     app.post("/api/v1/add-food", logger, async (req, res) => {
       try{
         const foodInfo = req.body;
@@ -94,7 +134,6 @@ async function run() {
     app.get("/api/v1/foods", logger, async (req, res) => {
       try{
         let categoryText = req?.query?.category;
-        let email = req?.query?.email;
         let sortingProcess = "";
         let query = {};
         let options = {};
@@ -105,10 +144,6 @@ async function run() {
               categoryText = req.query.category.replace(/And/gi, "&");
             }
             query = {category : categoryText};
-          }
-
-          if(email) {
-            query = {donarEmail : email};
           }
         }
 
@@ -130,11 +165,26 @@ async function run() {
             }
           }
         }
-        
+
         const cursor = foodCollection.find(query, options);
         const result = await cursor.toArray();
         res.send(result);
 
+      } catch(err) {
+        console.log(err.message);
+      }
+    })
+
+    app.get("/api/v1/manage-food", logger, verifyToken, async (req, res) => {
+      try {
+          if(req?.query.email !== req?.user?.user) {
+            return res.status(403).send({message: "Forbidden Access!"});
+          }
+
+          const query = {donarEmail : req.query.email};
+          const result = await foodCollection.find(query).toArray();
+
+          res.send(result);
       } catch(err) {
         console.log(err.message);
       }
