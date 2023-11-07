@@ -102,8 +102,8 @@ async function run() {
         const result = await requestedFoodsCollection.find(query, option).toArray();
         res.send(result);
 
-      } catch (err) {
-        console.log(err.message);
+      } catch (error) {
+        console.log(error.message);
       }
     })
 
