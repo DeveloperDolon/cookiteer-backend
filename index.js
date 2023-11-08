@@ -169,10 +169,10 @@ async function run() {
     app.post("/api/v1/food-requests", logger, async (req, res) => {
       try{
         const requestData = req.body;
-        const query = {foodId : requestData.foodId};
+        const query = {foodId : requestData.foodId, requesterEmail: requestData.requesterEmail};
         const isExist = await requestedFoodsCollection.findOne(query);
-
-        if(isExist) {
+        
+        if(isExist?.requesterEmail === requestData?.requesterEmail) { 
           return res.status(409).send({message: "Conflict"});
         }
 
