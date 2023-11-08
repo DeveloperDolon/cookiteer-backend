@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
   origin: [
-    "http://localhost:5173"
+    "https://assignment-11-4dcde.web.app"
   ],
   credentials: true
 }));
@@ -53,31 +53,32 @@ const verifyToken = (req, res, next) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
 
     const foodCollection = client.db("cookiteerDB").collection("foodsCollection");
     const requestedFoodsCollection = client.db("cookiteerDB").collection("requestedFoodsCollection");
 
     // jwt authorization api is here
-    app.post("/api/v1/jwt", logger,(req, res) => {
+    app.post("/api/v1/jwt", logger, async (req, res) => {
       try{
         const user = req.body;
         const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "6h"});
 
         res.cookie('token', token, {
           httpOnly: true,
-          secure: false,
+          secure: true,
         }).send({success : true});
       } catch(err) {
         console.log(err.message);
       }
     })
 
-    app.post("/api/v1/logout", logger, (req, res) => {
+    app.post("/api/v1/logout", logger, async(req, res) => {
       try{
-        res.clearCookie('token', {maxAge: 0}).send({logout: true});
         console.log("user logout ",req.body);
+
+        res.clearCookie('token', {maxAge: 0}).send({logout: true});
       } catch(err) {
         console.log(err.message);
       }
