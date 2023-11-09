@@ -12,7 +12,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
   origin: [
-    "https://assignment-11-4dcde.web.app"
+    "https://assignment-11-4dcde.web.app",
+    "https://assignment-11-4dcde.firebaseapp.com"
   ],
   credentials: true
 }));
@@ -46,6 +47,7 @@ const verifyToken = (req, res, next) => {
     }
 
     req.user = decode;
+
     next();
   })
 }
@@ -67,26 +69,29 @@ async function run() {
 
         res.cookie('token', token, {
           httpOnly: true,
-          secure: true,
+          secure: process.env.NODE_ENV === 'production', 
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
         }).send({success : true});
       } catch(err) {
         console.log(err.message);
       }
-    })
+    });
 
     app.post("/api/v1/logout", logger, async(req, res) => {
       try{
         console.log("user logout ",req.body);
 
-        res.clearCookie('token', {maxAge: 0}).send({logout: true});
+        res.clearCookie('token', {
+          maxAge: 0, 
+          secure: process.env.NODE_ENV === "production" ? true : false,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
+        }).send({logout: true});
       } catch(err) {
         console.log(err.message);
       }
-    }) 
-
+    });
 
     // foods related api methods are here
-
     app.patch("/api/v1/manage-food-requests", logger, async (req, res) => {
       try {
 
@@ -311,7 +316,7 @@ async function run() {
       }
     })
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
